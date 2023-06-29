@@ -1,20 +1,16 @@
 import sys
 
-from dotenv import load_dotenv
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QLineEdit, QWidget, QPushButton, QLabel
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 import jamfs
 
-# bar code: C121-10623
-load_dotenv()
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.email = ''
+        self.email = '' 
         self.password = ''
 
 
