@@ -4,9 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.by import By
 
 email = os.getenv("EMAIL")
@@ -14,7 +13,7 @@ password = os.getenv("PASSWORD")
 JAMF_URL = 'https://login.jamfschool.com/login'
 # IPAD_ID = 'c121-33491'
 
-chrome_options = Options()
+chrome_options = ChromeOptions()
 chrome_options.add_experimental_option("detach", True)
 driver: webdriver.Chrome = webdriver.Chrome(options=chrome_options)
 driver.implicitly_wait(35)
