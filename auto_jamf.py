@@ -8,9 +8,8 @@ from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.options import Options as FoxOptions
 import maskpass
 
-#  line up, clear, debug info, next line print break line
+# TODO line up, clear, debug info, next line print break line
 
-# IPAD_ID = 'c121-33491'
 LINE_UP = '\033[1A'
 LINE_CLEAR = '\x1b[2K'
 
