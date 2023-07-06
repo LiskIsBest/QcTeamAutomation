@@ -69,7 +69,6 @@ class MainWindow(QMainWindow):
 
         #---------------------------------------------------------------------#
 
-
         # scanner item add button
         self.scanner_add_button = QPushButton(parent=self, text='Add')
         self.scanner_add_button.clicked.connect(self.scan_enter)
