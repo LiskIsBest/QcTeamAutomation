@@ -18,7 +18,7 @@ WIPE_CHECKBOX = gen_element(by=By.XPATH, value='//*[@id="wipeDeviceCheck"]')
 
 
 
-def open_nss_site(driver: webdriver.Chrome, username: str, password: str) -> str:
+def open_nss_site(driver: webdriver.Chrome, username: str, password: str) -> None:
     driver.get(NSS_URL)
     username_input = driver.find_element(**NSS_USERNAME)
     username_input.send_keys(username)
