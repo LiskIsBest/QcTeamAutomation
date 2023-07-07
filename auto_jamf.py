@@ -1,11 +1,14 @@
 import time
+import os
+import subprocess
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
-from selenium.webdriver.firefox.options import Options as FoxOptions
+from selenium.webdriver.firefox.options import Options as FireOptions
+from selenium.webdriver.firefox.service import Service as FireService
 import maskpass
 
 JAMF_URL: str = "https://login.jamfschool.com/login"
@@ -13,6 +16,14 @@ FORCE_MOVE_JAVASCRIPT: str = (
     'document.getElementById("force-move-option-checkbox").click()'
 )
 
+# Border color "Yellow"
+BC = '\033[0;33m' 
+# Title color "Cyan"
+TC = '\033[0;36m' 
+# Warning color "Red"
+WC = '\033[0;31m' 
+# Color terminator
+CT = '\033[00m' 
 
 def main() -> None:
     JAMF_EMAIL: dict = element_dict(by=By.ID, value="email")
@@ -43,19 +54,19 @@ def main() -> None:
     SAVE_IPAD_BUTTON: dict = element_dict(by=By.ID, value="btn-edit")
 
     print(
-        """
-    ==============================
-    |      Jamf auto update-     |
-    |       I-pad location       |
-    |                            |
-    |  Created by: Darien Moore  |
-    ==============================
-    |    Disable 2FA for Jamf.   |
-    |   will not work otherwise  |
-    =============================="""
+        f"""
+    {BC}=============================={CT}
+    {BC}|{CT}      {TC}Jamf auto update-{CT}     {BC}|{CT}
+    {BC}|{CT}       {TC}I-pad location{CT}       {BC}|{CT}
+    {BC}|{CT}                            {BC}|{CT}
+    {BC}|{CT}  Created by: Darien Moore  {BC}|{CT}
+    {BC}|{CT}============================{BC}|{CT}
+    {BC}|{CT}   {WC}!Disable 2FA for Jamf!{CT}   {BC}|{CT}
+    {BC}|{CT}  {WC}!Will not work otherwise!{CT} {BC}|{CT}
+    {BC}=============================={CT}"""
     )
 
-    print("--------------------------------------\n")
+    print(f'{SEPERATOR}\n')
     school: str = footer_input("Enter the location name (check jamf for exact name): ")
     email: str = footer_input("Enter Jamf username/email: ")
     password: str = footer_mask(prompt="Enter your Jamf password: ")
@@ -63,7 +74,7 @@ def main() -> None:
         "Enter your desired browser (default: Chrome)\n 1. Chrome/Chromium, 2. Edge, 3. Firefox: ",
         depth=2,
     )
-    minimized: str = footer_input("Start browser minimized? (defualt no) y/n: ")
+    minimized: str = footer_input("Start browser minimized? (defualt yes) y/n: ")
     if browser not in {"1", "2", "3"}:
         browser = "1"
 
@@ -78,15 +89,21 @@ def main() -> None:
             options = EdgeOptions()
             driver = webdriver.Edge(options=options)
         case "3":
-            options = FoxOptions()
-            driver = webdriver.Firefox(options=options)
-    if minimized != "y".lower():
+            options = FireOptions()
+            service = FireService()
+            service.log_file = subprocess.DEVNULL
+            driver = webdriver.Firefox(options=options,service=service)
+    if minimized != "n".lower():
         driver.minimize_window()
     driver.implicitly_wait(35)
+    try:
+        os.remove("geckodriver.log")
+    except:
+        pass
 
     driver.get(JAMF_URL)
 
-    footer_print("Logging in...")
+    footer_print("Logging in")
     driver.find_element(**JAMF_EMAIL).send_keys(email)
     driver.find_element(**JAMF_PASSWORD).send_keys(password)
     driver.find_element(**JAMF_SIGN_IN_BUTTON).click()
@@ -105,48 +122,49 @@ def main() -> None:
             driver.quit()
             break
 
-        footer_print("searching ipad")
+        footer_print(f'Searching for I-pad:{scan}')
         inventory_search = driver.find_element(**INVENTORY_SEARCH)
         inventory_search.clear()
         inventory_search.send_keys(scan)
         time.sleep(1.1)
 
-        footer_print("clicking ipad")
+        footer_print(f'Found I-pad:{scan}, clicking')
         driver.find_element(**FIRST_IPAD_RESULT).click()
 
-        footer_print("clicking edit details")
+        footer_print('Opening "Edit details" menu')
         driver.find_element(**EDIT_DETAILS_BUTTON).click()
 
-        footer_print("change location button")
+        footer_print('Clicking "Change" button')
         driver.find_element(**LOCATION_CHANGE_BUTTON).click()
 
-        footer_print("turning on force now")
+        footer_print('Turning on "Force now"')
         driver.execute_script(FORCE_MOVE_JAVASCRIPT)
 
-        footer_print(f"selecting {school}")
+        footer_print(f'Selecting {school} from drop down')
         school_drop_down = Select(driver.find_element(**SCHOOL_LIST_DROP_DOWN))
         time.sleep(1.3)
         school_drop_down.select_by_visible_text(text=school)
 
-        footer_print("saving details")
+        footer_print('Saving details')
         driver.find_element(**SAVE_DETAILS_BUTTON).click()
 
-        footer_print("saving ipad")
+        footer_print('Saving I-pad')
         driver.find_element(**SAVE_IPAD_BUTTON).click()
 
-        footer_print("opening devices drop menu")
-        driver.find_element(**DEVICES_SIDE_MENU)
-        driver.get("https://austinisd.jamfcloud.com/devices")
+        footer_print(f'Updating I-pad:{scan} completed.')
+        time.sleep(0.4)
 
-        footer_print(f"Updating I-pad:{scan} completed.")
-        time.sleep(1)
+        footer_print('Return to "Inventory" page')
+        driver.find_element(**DEVICES_SIDE_MENU)
+        driver.get('https://austinisd.jamfcloud.com/devices')
+
         clear_lines(12)
 
 
 LINE_UP: str = "\033[1A"
-LINE_CLEAR: str = "\x1b[2K"
 LINE_DOWN: str = "\033[1B"
-SEPERATOR: str = "--------------------------------------"
+LINE_CLEAR: str = "\x1b[2K"
+SEPERATOR: str = "-"*38
 
 
 def element_dict(by: By | str = By.ID, value: str | None = None) -> dict:
@@ -164,7 +182,7 @@ def footer_print(
 ) -> None:
     clear_lines(1)
     print("\n" + SEPERATOR)
-    print(LINE_UP, LINE_UP, *args, **kwargs, sep="")
+    print(LINE_UP*2, *args, **kwargs)
     print(LINE_DOWN, end="")
 
 
@@ -179,7 +197,7 @@ def footer_input(prompt: str, depth: int = 1) -> str:
 def footer_mask(prompt: str) -> str:
     clear_lines(1)
     print("\n" + SEPERATOR)
-    val: str = maskpass.askpass(prompt=LINE_UP + LINE_UP + prompt, mask="")
+    val: str = maskpass.askpass(prompt=LINE_UP*2 + prompt, mask="")
     print(LINE_DOWN, end="")
     return val
 
