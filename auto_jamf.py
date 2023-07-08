@@ -173,6 +173,7 @@ def main() -> None:
 
     while True:
         footer_print("Loading inventory")
+        driver.find_element(**DEVICES_SIDE_MENU)
         inventory_search = driver.find_element(**INVENTORY_SEARCH)
         clear_lines(1)
 
