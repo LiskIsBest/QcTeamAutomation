@@ -217,7 +217,7 @@ def main() -> None:
         driver.find_element(**DEVICES_SIDE_MENU)
         driver.get("https://austinisd.jamfcloud.com/devices")
 
-        clear_lines(12)
+        clear_lines(11)
 
 
 # ANSI escape characters to move terminal cursor
@@ -274,11 +274,13 @@ def footer_mask(prompt: str) -> str:
 
 
 class SignInFailed(Exception):
-    pass
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 
 class NoAuthCode(Exception):
-    pass
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 
 if __name__ == "__main__":
@@ -317,3 +319,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n")
         print(f"{TC}Ctrl+C pressed. Terminating program.{CT}")
+    print("Closing in 8 seconds...")
+    time.sleep(8)
