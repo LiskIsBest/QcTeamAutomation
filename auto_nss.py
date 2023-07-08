@@ -1,8 +1,5 @@
 import time
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
