@@ -14,7 +14,15 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.options import Options as FireOptions
 from selenium.webdriver.firefox.service import Service as FireService
-from selenium.common.exceptions import NoSuchWindowException, SessionNotCreatedException, ElementNotInteractableException
+from selenium.common.exceptions import (
+    NoSuchWindowException,
+    SessionNotCreatedException,
+    ElementNotInteractableException,
+    WebDriverException,
+    TimeoutException,
+    NoSuchElementException,
+    ElementNotVisibleException,
+)
 from urllib3.exceptions import ProtocolError
 import maskpass
 
@@ -39,6 +47,13 @@ def main() -> None:
     JAMF_PASSWORD: dict = element_dict(by=By.ID, value="password")
     JAMF_SIGN_IN_BUTTON: dict = element_dict(
         by=By.XPATH, value='//*[@id="app"]/div/div/article/div/div/form/div[3]/button'
+    )
+    JAMF_SIGN_IN_ERROR: dict = element_dict(
+        by=By.XPATH,
+        value='//*[@id="app"]/div/div/article/div/div/form/div[2]/div[3]/small',
+    )
+    JAMF_AUTH_FORM: dict = element_dict(
+        by=By.XPATH, value='//*[@id="app"]/div/div/article/div/form/div[1]/div[2]/input'
     )
     DEVICES_SIDE_MENU: dict = element_dict(
         by=By.CSS_SELECTOR, value='a[data-target="#devices"]'
@@ -98,38 +113,76 @@ def main() -> None:
             driver = webdriver.Chrome(options=options)
         case "2":
             options = EdgeOptions()
+            options.add_experimental_option("excludeSwitches", ["enable-logging"])
             driver = webdriver.Edge(options=options)
         case "3":
             options = FireOptions()
             service = FireService(log_path=os.path.devnull)
             driver = webdriver.Firefox(options=options, service=service)
+
+    driver_handle = driver.current_window_handle
+
     if minimized != "n".lower():
         driver.minimize_window()
+
     driver.implicitly_wait(35)
 
     driver.get(JAMF_URL)
+
+    lines_to_clear: int = 2
 
     footer_print("Logging in")
     driver.find_element(**JAMF_EMAIL).send_keys(email)
     driver.find_element(**JAMF_PASSWORD).send_keys(password)
     driver.find_element(**JAMF_SIGN_IN_BUTTON).click()
 
+    # Sign in failed check
+    try:
+        driver.implicitly_wait(5)
+        driver.find_element(**JAMF_SIGN_IN_ERROR)
+    except (NoSuchElementException, ElementNotVisibleException):
+        pass
+
+    try:
+        driver.implicitly_wait(5)
+        driver.find_element(**JAMF_AUTH_FORM)
+        if isinstance(driver, webdriver.Firefox):
+            driver.maximize_window()
+        else:
+            driver.switch_to.window(driver_handle)
+        lines_to_clear += 2
+        driver.implicitly_wait(60)
+        footer_print(f"{TC}You have 60 seconds enter the authenticator code.{CT}")
+        footer_print(
+            f"{TC}Program will close if authenticator code is not entererd.{CT}"
+        )
+        try:
+            driver.find_element(**DEVICES_SIDE_MENU)
+        except TimeoutException:
+            raise NoAuthCode
+        driver.implicitly_wait(35)
+        if minimized != "n".lower():
+            driver.minimize_window()
+    except (NoSuchElementException, ElementNotVisibleException):
+        pass
+
     footer_print('Opening "Devices/Inventory" menu')
-    driver.find_element(**DEVICES_SIDE_MENU)
     driver.get("https://austinisd.jamfcloud.com/devices")
 
-    clear_lines(2)
+    clear_lines(lines_to_clear)
 
     while True:
-        footer_print("Wait for the search page to load before scanning.")
-        scan = footer_input("Scan serial number or asset tag (0 to quit): ")
+        footer_print("Loading inventory")
+        inventory_search = driver.find_element(**INVENTORY_SEARCH)
+        clear_lines(1)
+
+        scan = footer_input(" Scan serial number or asset tag (0 to quit): ")
         if scan == "0" or scan == "":
             driver.close()
             driver.quit()
             break
 
         footer_print(f"Searching for I-pad:{scan}")
-        inventory_search = driver.find_element(**INVENTORY_SEARCH)
         inventory_search.clear()
         inventory_search.send_keys(scan)
         time.sleep(1.1)
@@ -220,25 +273,47 @@ def footer_mask(prompt: str) -> str:
     return val
 
 
+class SignInFailed(Exception):
+    pass
+
+
+class NoAuthCode(Exception):
+    pass
+
+
 if __name__ == "__main__":
     try:
         main()
-    except ProtocolError:
-        print("\n")
-        print(f"{WC}Browser was closed before connecting to the first url!{CT}")
-    except NoSuchWindowException:
+    except TimeoutException:
         print("\n")
         print(
-            f"{WC}Browser was closed!{CT}\n{WC}Please do not close the browser while it is running.{CT}"
+            f"{WC}Webpage took too long to load.{CT}\n{TC}Check internet connection and try agian.{CT}"
+        )
+        pass
+    except ElementNotInteractableException:
+        print("\n")
+        print(
+            f"{WC}driver.find_element(**SOME_DATA) failed!\nContact program author.{CT}"
         )
     except SessionNotCreatedException:
         print("\n")
         print(
-            f"{WC}Selected browser binary not found!{CT}\n{WC}Please make sure the selected browser is installed.{CT}"
+            f"{WC}Selected browser binary not found!\nPlease make sure the selected browser is installed.{CT}"
         )
-    except ElementNotInteractableException:
+    except ProtocolError:
         print("\n")
-        print(f"{WC}driver.find_element(**SOME_DATA) failed!\nContact program author.{CT}")
+        print(f"{WC}Browser was closed before connecting to the first url!{CT}")
+    except (NoSuchWindowException, WebDriverException):
+        print("\n")
+        print(
+            f"{WC}Browser was closed!{CT}\n{WC}Please do not close the browser while it is running.{CT}"
+        )
+    except SignInFailed:
+        print("\n")
+        print(f"{WC}Sign in failed.\nEmail or Password were invalid.{CT}")
+    except NoAuthCode:
+        print("\n")
+        print(f"{WC}Failed to enter your authenticator code in time.{WC}")
     except KeyboardInterrupt:
         print("\n")
         print(f"{TC}Ctrl+C pressed. Terminating program.{CT}")
