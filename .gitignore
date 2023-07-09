@@ -123,10 +123,11 @@ celerybeat.pid
 .env
 .venv
 env/
-venv/
+*venv/
 ENV/
 env.bak/
 venv.bak/
+
 
 # Spyder project settings
 .spyderproject
@@ -160,5 +161,6 @@ cython_debug/
 #.idea/
 
 .vscode
-output
+output/
 *.spec
+junk/
