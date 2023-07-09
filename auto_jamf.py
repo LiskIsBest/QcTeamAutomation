@@ -289,7 +289,6 @@ if __name__ == "__main__":
         print(
             f"{WC}Webpage took too long to load.{CT}\n{TC}Check internet connection and try agian.{CT}"
         )
-        pass
     except ElementNotInteractableException:
         print("\n")
         print(
