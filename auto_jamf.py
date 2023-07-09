@@ -49,8 +49,8 @@ def main() -> None:
         by=By.XPATH, value='//*[@id="app"]/div/div/article/div/div/form/div[3]/button'
     )
     JAMF_SIGN_IN_ERROR: dict = element_dict(
-        by=By.XPATH,
-        value='//*[@id="app"]/div/div/article/div/div/form/div[2]/div[3]/small',
+        by=By.CLASS_NAME,
+        value='error-text__29lYK',
     )
     JAMF_AUTH_FORM: dict = element_dict(
         by=By.XPATH, value='//*[@id="app"]/div/div/article/div/form/div[1]/div[2]/input'
@@ -85,8 +85,6 @@ def main() -> None:
     {BC}|{CT}                            {BC}|{CT}
     {BC}|{CT}  Created by: Darien Moore  {BC}|{CT}
     {BC}|{CT}============================{BC}|{CT}
-    {BC}|{CT}   {WC}!Disable 2FA for Jamf!{CT}   {BC}|{CT}
-    {BC}|{CT}  {WC}!Will not work otherwise!{CT} {BC}|{CT}
     {BC}|{CT}   press Ctrl + C to exit.  {BC}|{CT}
     {BC}=============================={CT}"""
     )
@@ -140,6 +138,7 @@ def main() -> None:
     try:
         driver.implicitly_wait(5)
         driver.find_element(**JAMF_SIGN_IN_ERROR)
+        raise SignInFailed
     except (NoSuchElementException, ElementNotVisibleException):
         pass
 
@@ -275,13 +274,11 @@ def footer_mask(prompt: str) -> str:
 
 
 class SignInFailed(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+    pass
 
 
 class NoAuthCode(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+    pass
 
 
 if __name__ == "__main__":
@@ -320,5 +317,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n")
         print(f"{TC}Ctrl+C pressed. Terminating program.{CT}")
-    print("Closing in 8 seconds...")
-    time.sleep(8)
