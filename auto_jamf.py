@@ -254,7 +254,7 @@ def footer_print(
 
 def footer_input(prompt: str, depth: int = 1) -> str:
     """
-    prints var:SEPERATOR below input() promt.
+    prints var:SEPERATOR below input() prompt.
     rtype:str
     """
     clear_lines(1)
