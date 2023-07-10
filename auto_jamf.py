@@ -43,7 +43,6 @@ CT = "\033[00m"
 
 
 def main() -> None:
-
     JAMF_EMAIL: dict = element_dict(by=By.ID, value="email")
     JAMF_PASSWORD: dict = element_dict(by=By.ID, value="password")
     JAMF_SIGN_IN_BUTTON: dict = element_dict(
@@ -51,7 +50,7 @@ def main() -> None:
     )
     JAMF_SIGN_IN_ERROR: dict = element_dict(
         by=By.CLASS_NAME,
-        value='error-text__29lYK',
+        value="error-text__29lYK",
     )
     JAMF_AUTH_FORM: dict = element_dict(
         by=By.XPATH, value='//*[@id="app"]/div/div/article/div/form/div[1]/div[2]/input'
@@ -60,7 +59,9 @@ def main() -> None:
     DEVICES_SIDE_MENU: dict = element_dict(
         by=By.XPATH, value='//*[@id="app"]/aside/nav[1]/ul/li[2]/a'
     )
-    DEVICES_SIDE_MENU2: dict = element_dict(by=By.CSS_SELECTOR, value='a[data-target="#devices"]')
+    DEVICES_SIDE_MENU2: dict = element_dict(
+        by=By.CSS_SELECTOR, value='a[data-target="#devices"]'
+    )
     INVENTORY_SEARCH: dict = element_dict(
         by=By.CSS_SELECTOR, value='input[placeholder="Search..."]'
     )
@@ -72,9 +73,13 @@ def main() -> None:
     EDIT_DETAILS_BUTTON: dict = element_dict(
         by=By.XPATH, value='//*[@id="details"]/div/div[1]/div/a'
     )
-    CURRENT_OWNER: dict = element_dict(by=By.CLASS_NAME, value="select2-selection__clear")
+    CURRENT_OWNER: dict = element_dict(
+        by=By.CLASS_NAME, value="select2-selection__clear"
+    )
 
-    ERASE_IPAD_BUTTON: dict = element_dict(by=By.XPATH, value='//*[@id="importantButton"]')
+    ERASE_IPAD_BUTTON: dict = element_dict(
+        by=By.XPATH, value='//*[@id="importantButton"]'
+    )
     ERASE_IPAD_CONFIRM: dict = element_dict(by=By.ID, value="wipe-submit")
 
     LOCATION_CHANGE_BUTTON: dict = element_dict(
@@ -218,7 +223,7 @@ def main() -> None:
         footer_print("Saving details")
         driver.find_element(**SAVE_DETAILS_BUTTON).click()
 
-        footer_print('Clearing owner')
+        footer_print("Clearing owner")
         driver.find_element(**CURRENT_OWNER).click()
 
         footer_print("Saving I-pad")
@@ -227,7 +232,7 @@ def main() -> None:
         footer_print(f"Location change for I-pad:{scan} completed.")
         time.sleep(0.4)
 
-        footer_print(f'Factory reseting I-pad:{scan}')
+        footer_print(f"Factory reseting I-pad:{scan}")
         driver.find_element(**ERASE_IPAD_BUTTON).click()
         driver.find_element(**ERASE_IPAD_CONFIRM).click()
 
