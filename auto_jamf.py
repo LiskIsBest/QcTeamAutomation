@@ -56,8 +56,9 @@ def main() -> None:
         by=By.XPATH, value='//*[@id="app"]/div/div/article/div/form/div[1]/div[2]/input'
     )
     DEVICES_SIDE_MENU: dict = element_dict(
-        by=By.CSS_SELECTOR, value='a[data-target="#devices"]'
+        by=By.XPATH, value='//*[@id="app"]/aside/nav[1]/ul/li[2]/a'
     )
+    DEVICES_SIDE_MENU2: dict = element_dict(by=By.CSS_SELECTOR, value='a[data-target="#devices"]')
     INVENTORY_SEARCH: dict = element_dict(
         by=By.CSS_SELECTOR, value='input[placeholder="Search..."]'
     )
@@ -142,6 +143,7 @@ def main() -> None:
     except (NoSuchElementException, ElementNotVisibleException):
         pass
 
+    # Authenticator code check
     try:
         driver.implicitly_wait(5)
         driver.find_element(**JAMF_AUTH_FORM)
@@ -170,6 +172,7 @@ def main() -> None:
 
     clear_lines(lines_to_clear)
 
+    driver.implicitly_wait(35)
     while True:
         footer_print("Loading inventory")
         driver.find_element(**DEVICES_SIDE_MENU)
@@ -214,7 +217,7 @@ def main() -> None:
         time.sleep(0.4)
 
         footer_print('Return to "Inventory" page')
-        driver.find_element(**DEVICES_SIDE_MENU)
+        driver.find_element(**DEVICES_SIDE_MENU2)
         driver.get("https://austinisd.jamfcloud.com/devices")
 
         clear_lines(11)
@@ -305,7 +308,7 @@ if __name__ == "__main__":
     except (NoSuchWindowException, WebDriverException):
         print("\n")
         print(
-            f"{WC}Browser was closed!{CT}\n{WC}Please do not close the browser while it is running.{CT}"
+            f"{WC}Browser was closed/crashed!{CT}\n{WC}Please do not close the browser while it is running.{CT}"
         )
     except SignInFailed:
         print("\n")
