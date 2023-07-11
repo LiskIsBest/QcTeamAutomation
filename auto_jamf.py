@@ -73,7 +73,7 @@ def main() -> None:
     EDIT_DETAILS_BUTTON: dict = element_dict(
         by=By.XPATH, value='//*[@id="details"]/div/div[1]/div/a'
     )
-    USER_BOX: dict = element_dict(by=By.ID, value='select2-owner-id-container')
+    USER_BOX: dict = element_dict(by=By.XPATH, value='//*[@id="owner-id"]/option')
     CURRENT_USER: dict = element_dict(
         by=By.CLASS_NAME, value="select2-selection__clear"
     )
