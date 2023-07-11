@@ -73,7 +73,8 @@ def main() -> None:
     EDIT_DETAILS_BUTTON: dict = element_dict(
         by=By.XPATH, value='//*[@id="details"]/div/div[1]/div/a'
     )
-    CURRENT_OWNER: dict = element_dict(
+    USER_BOX: dict = element_dict(by=By.ID, value='select2-owner-id-container')
+    CURRENT_USER: dict = element_dict(
         by=By.CLASS_NAME, value="select2-selection__clear"
     )
 
@@ -107,15 +108,16 @@ def main() -> None:
     school: str = footer_input("Enter the location name (check jamf for exact name): ")
     email: str = footer_input("Enter Jamf username/email: ")
     password: str = footer_mask(prompt="Enter your Jamf password: ")
+    wipe: str = footer_input("Turn on the wipe functionality? (default yes) y/n: ")
     browser: str = footer_input(
         "Enter your desired browser (default: Chrome)\n 1. Chrome/Chromium, 2. Edge, 3. Firefox: ",
         depth=2,
     )
-    minimized: str = footer_input("Start browser minimized? (defualt yes) y/n: ")
+    minimized: str = footer_input("Start browser minimized? (default yes) y/n: ")
     if browser not in {"1", "2", "3"}:
         browser = "1"
 
-    clear_lines(6)
+    clear_lines(7)
 
     driver: webdriver.Chrome | webdriver.Edge | webdriver.Firefox
     match (browser):
@@ -134,7 +136,7 @@ def main() -> None:
 
     driver_handle = driver.current_window_handle
 
-    if minimized != "n".lower():
+    if minimized.lower() != "n":
         driver.minimize_window()
 
     driver.implicitly_wait(35)
@@ -187,6 +189,7 @@ def main() -> None:
 
     driver.implicitly_wait(35)
     while True:
+        lines_to_clear = 11
         footer_print("Loading inventory")
         driver.find_element(**DEVICES_SIDE_MENU)
         inventory_search = driver.find_element(**INVENTORY_SEARCH)
@@ -203,9 +206,18 @@ def main() -> None:
         inventory_search.send_keys(scan)
         time.sleep(1.1)
 
-        footer_print(f"Found I-pad:{scan}, clicking")
-        driver.find_element(**FIRST_IPAD_RESULT).click()
+        try:
+            driver.implicitly_wait(2)
+            driver.find_element(**FIRST_IPAD_RESULT).click()
+            footer_print(f"Found I-pad:{scan}, clicking")
+        except NoSuchElementException:
+            footer_print(f'I-pad:{scan} not found. Returning to scan')
+            time.sleep(3)
+            clear_lines(4)
+            driver.implicitly_wait(35)
+            continue
 
+        driver.implicitly_wait(35)
         footer_print('Opening "Edit details" menu')
         driver.find_element(**EDIT_DETAILS_BUTTON).click()
 
@@ -223,8 +235,13 @@ def main() -> None:
         footer_print("Saving details")
         driver.find_element(**SAVE_DETAILS_BUTTON).click()
 
-        footer_print("Clearing owner")
-        driver.find_element(**CURRENT_OWNER).click()
+        if wipe.lower() != 'n':
+            lines_to_clear += 1
+            if driver.find_element(**USER_BOX).text == "":
+                footer_print("No user to clear")
+            else:
+                footer_print("Clearing user")
+                driver.find_element(**CURRENT_USER).click()
 
         footer_print("Saving I-pad")
         driver.find_element(**SAVE_IPAD_BUTTON).click()
@@ -232,15 +249,17 @@ def main() -> None:
         footer_print(f"Location change for I-pad:{scan} completed.")
         time.sleep(0.4)
 
-        footer_print(f"Factory reseting I-pad:{scan}")
-        driver.find_element(**ERASE_IPAD_BUTTON).click()
-        driver.find_element(**ERASE_IPAD_CONFIRM).click()
+        if wipe.lower() != 'n':
+            lines_to_clear += 1
+            footer_print(f"Factory reseting I-pad:{scan}")
+            driver.find_element(**ERASE_IPAD_BUTTON).click()
+            driver.find_element(**ERASE_IPAD_CONFIRM).click()
 
         footer_print('Return to "Inventory" page')
         driver.find_element(**DEVICES_SIDE_MENU2)
         driver.get("https://austinisd.jamfcloud.com/devices")
 
-        clear_lines(13)
+        clear_lines(lines_to_clear)
 
 
 # ANSI escape characters to move terminal cursor
