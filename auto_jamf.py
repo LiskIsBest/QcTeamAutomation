@@ -41,7 +41,6 @@ WC = "\033[0;31m"
 # Color terminator
 CT = "\033[00m"
 
-
 def main() -> None:
     JAMF_EMAIL: dict = element_dict(by=By.ID, value="email")
     JAMF_PASSWORD: dict = element_dict(by=By.ID, value="password")
@@ -213,7 +212,7 @@ def main() -> None:
         except NoSuchElementException:
             footer_print(f'I-pad:{scan} not found. Returning to scan')
             time.sleep(3)
-            clear_lines(4)
+            clear_lines(3)
             driver.implicitly_wait(35)
             continue
 
