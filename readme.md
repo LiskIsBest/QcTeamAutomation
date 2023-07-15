@@ -1,4 +1,4 @@
-# AISD jamf & nss tools automation
+# AISD jamf & nss tools automation.
 ---
 ### auto_jamf.py
 Terminal version of the jamf location update automation.
