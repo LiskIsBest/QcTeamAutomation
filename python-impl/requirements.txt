@@ -20,5 +20,5 @@ sortedcontainers==2.4.0
 trio==0.22.1
 trio-websocket==0.10.3
 urllib3==2.0.3
-windows-curses==2.3.1
+# windows-curses==2.3.1
 wsproto==1.2.0
