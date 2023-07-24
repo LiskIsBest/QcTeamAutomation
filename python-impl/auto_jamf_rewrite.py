@@ -48,13 +48,12 @@ class AutoJamf:
     chromeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
     edgeOptions = EdgeOptions()
     edgeOptions.add_experimental_option("excludeSwitches", ["enable-logging"])
-    service = Service(log_path=os.path.devnull) # for firefox
+    service = Service(log_path=os.path.devnull)  # for firefox
     default_wait = 30
 
     title_card = f"""
     {BC}=============================={CT}
-    {BC}|{CT}      {TC}Jamf auto update-{CT}     {BC}|{CT}
-    {BC}|{CT}       {TC}I-pad location{CT}       {BC}|{CT}
+    {BC}|{CT}  {TC}Jamf process automation{CT}   {BC}|{CT}
     {BC}|{CT}                            {BC}|{CT}
     {BC}|{CT}  Created by: Darien Moore  {BC}|{CT}
     {BC}|{CT}============================{BC}|{CT}
@@ -92,17 +91,15 @@ class AutoJamf:
 
         clear_lines(7)
 
-        self.driver = self.open_browser()
+        self.driver = self.open_browser(browser=self.browser)
         self.driver_handle = self.driver.current_window_handle
 
-        self.login()
+        clear_lines(self.login(email=self.email, password=self.password))
 
         while True:
             self.driver.implicitly_wait(self.default_wait)
-            lines_to_clear = 11
             footer_print("Loading inventory")
-            self.driver.find_element(**DEVICES_SIDE_MENU)
-            inventory_search = self.driver.find_element(**INVENTORY_SEARCH)
+            self.driver.find_element(**INVENTORY_SEARCH)
             clear_lines(1)
 
             scan = footer_input(" Scan serial number or asset tag (0 to quit): ")
@@ -111,41 +108,13 @@ class AutoJamf:
                 self.driver.quit()
                 break
 
-            footer_print(f"Searching for I-pad:{scan}")
-            inventory_search.clear()
-            inventory_search.send_keys(scan)
-            time.sleep(1.1)
-
-            try:
-                self.driver.implicitly_wait(2)
-                self.driver.find_element(**FIRST_IPAD_RESULT).click()
-                footer_print(f"Found I-pad:{scan}, clicking")
-            except NoSuchElementException:
-                footer_print(f'I-pad:{scan} not found. Returning to scan')
-                time.sleep(3)
-                clear_lines(3)
-                continue
-        
-            self.location_change()
-            if self.wipe:
-                lines_to_clear += 1
-                self.wipe_user()
-
-            footer_print("Saving I-pad")
-            self.driver.find_element(**SAVE_IPAD_BUTTON).click()
-
-            if self.wipe:
-                lines_to_clear +=1
-                self.erase_ipad(scan=scan)
-
-            footer_print('Return to "Inventory" page')
-            self.driver.find_element(**DEVICES_SIDE_MENU2)
-            self.driver.get("https://austinisd.jamfcloud.com/devices")
-
+            lines_to_clear = self.process(scan=scan)
             clear_lines(lines_to_clear)
 
-    def open_browser(self) -> webdriver.Chrome|webdriver.Edge|webdriver.Firefox:
-        match (self.browser):
+    def open_browser(
+        self, browser: Browsers
+    ) -> webdriver.Chrome | webdriver.Edge | webdriver.Firefox:
+        match (browser):
             case Browsers.CHROME:
                 driver = webdriver.Chrome(options=self.chromeOptions)
             case Browsers.EDGE:
@@ -159,14 +128,14 @@ class AutoJamf:
 
         return driver
 
-    def login(self) -> None:
+    def login(self, email: str, password: str) -> int:
         self.driver.get(JAMF_URL)
 
         lines_to_clear: int = 2
 
         footer_print("Logging in")
-        self.driver.find_element(**JAMF_EMAIL).send_keys(self.email)
-        self.driver.find_element(**JAMF_PASSWORD).send_keys(self.password)
+        self.driver.find_element(**JAMF_EMAIL).send_keys(email)
+        self.driver.find_element(**JAMF_PASSWORD).send_keys(password)
         self.driver.find_element(**JAMF_SIGN_IN_BUTTON).click()
 
         # Sign in failed check
@@ -204,8 +173,43 @@ class AutoJamf:
         footer_print('Opening "Devices/Inventory" menu')
         self.driver.get("https://austinisd.jamfcloud.com/devices")
 
-        clear_lines(lines_to_clear)
+        return lines_to_clear
 
+    def process(self, scan: str) -> int:
+        lines_to_clear: int = 11
+
+        footer_print(f"Searching for I-pad:{scan}")
+        inventory_search = self.driver.find_element(**INVENTORY_SEARCH)
+        inventory_search.clear()
+        inventory_search.send_keys(scan)
+        time.sleep(1.1)
+
+        try:
+            self.driver.implicitly_wait(2)
+            self.driver.find_element(**FIRST_IPAD_RESULT).click()
+            footer_print(f"Found I-pad:{scan}, clicking")
+        except NoSuchElementException:
+            footer_print(f"I-pad:{scan} not found. Returning to scan")
+            time.sleep(3)
+            return 3
+
+        self.location_change()
+        if self.wipe:
+            lines_to_clear += 1
+            self.wipe_user()
+
+        footer_print("Saving I-pad")
+        self.driver.find_element(**SAVE_IPAD_BUTTON).click()
+
+        if self.wipe:
+            lines_to_clear += 1
+            self.erase_ipad(scan=scan)
+
+        footer_print('Return to "Inventory" page')
+        self.driver.find_element(**DEVICES_SIDE_MENU2)
+        self.driver.get("https://austinisd.jamfcloud.com/devices")
+
+        return lines_to_clear
 
     def location_change(self) -> None:
         footer_print('Opening "Edit details" menu')
@@ -231,8 +235,8 @@ class AutoJamf:
         else:
             footer_print("Clearing user")
             self.driver.find_element(**CURRENT_USER).click()
-    
-    def erase_ipad(self, scan:str)->None:
+
+    def erase_ipad(self, scan: str) -> None:
         footer_print(f"Factory reseting I-pad:{scan}")
         self.driver.find_element(**ERASE_IPAD_BUTTON).click()
         self.driver.find_element(**ERASE_IPAD_CONFIRM).click()
