@@ -18,7 +18,6 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     ElementNotVisibleException,
 )
-from pick import pick
 from urllib3.exceptions import ProtocolError
 import maskpass
 
