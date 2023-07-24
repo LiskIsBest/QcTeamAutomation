@@ -77,7 +77,7 @@ class AutoJamf:
         )
         self.minimize: bool = (
             True
-            if footer_input("Start browser minimized? (default No) y/n: ")
+            if footer_input("Start browser minimized? (default No) y/N: ")
             == "Y".lower()
             else False
         )
@@ -178,7 +178,7 @@ class AutoJamf:
         return lines_to_clear
 
     def process(self, scan: str) -> int:
-        lines_to_clear: int = 11
+        lines_to_clear: int = 10
 
         footer_print(f"Searching for I-pad:{scan}")
         inventory_search: WebElement = self.driver.find_element(**INVENTORY_SEARCH)
