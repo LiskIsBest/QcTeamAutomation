@@ -92,17 +92,7 @@ class AutoJamf:
 
         clear_lines(7)
 
-        match (self.browser):
-            case Browsers.CHROME:
-                self.driver = webdriver.Chrome(options=self.chromeOptions)
-            case Browsers.EDGE:
-                self.driver = webdriver.Edge(options=self.edgeOptions)
-            case Browsers.FIREFOX:
-                self.driver = webdriver.Firefox(service=self.service)
-        self.driver.implicitly_wait(self.default_wait)
-
-        if self.minimize:
-            self.driver.minimize_window()
+        self.driver = self.open_browser()
         self.driver_handle = self.driver.current_window_handle
 
         self.login()
@@ -153,6 +143,21 @@ class AutoJamf:
             self.driver.get("https://austinisd.jamfcloud.com/devices")
 
             clear_lines(lines_to_clear)
+
+    def open_browser(self) -> webdriver.Chrome|webdriver.Edge|webdriver.Firefox:
+        match (self.browser):
+            case Browsers.CHROME:
+                driver = webdriver.Chrome(options=self.chromeOptions)
+            case Browsers.EDGE:
+                driver = webdriver.Edge(options=self.edgeOptions)
+            case Browsers.FIREFOX:
+                driver = webdriver.Firefox(service=self.service)
+        driver.implicitly_wait(self.default_wait)
+
+        if self.minimize:
+            driver.minimize_window()
+
+        return driver
 
     def login(self) -> None:
         self.driver.get(JAMF_URL)
