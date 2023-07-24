@@ -1,10 +1,3 @@
-# title: auto_jamf.py
-# author: Darien Moore
-# github: https://github.com/LiskIsBest/QcTeamAutomation
-# version: 1.0
-# description: Automation of the I-pad location change inside of Jamf
-
-
 import time
 import os
 
