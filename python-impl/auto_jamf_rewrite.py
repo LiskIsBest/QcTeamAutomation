@@ -8,6 +8,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import (
     NoSuchWindowException,
     SessionNotCreatedException,
@@ -17,8 +18,10 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     ElementNotVisibleException,
 )
+from pick import pick
 from urllib3.exceptions import ProtocolError
 import maskpass
+
 
 # ANSI escape characters for colors
 # Border color "Yellow"
@@ -179,7 +182,7 @@ class AutoJamf:
         lines_to_clear: int = 11
 
         footer_print(f"Searching for I-pad:{scan}")
-        inventory_search = self.driver.find_element(**INVENTORY_SEARCH)
+        inventory_search: WebElement = self.driver.find_element(**INVENTORY_SEARCH)
         inventory_search.clear()
         inventory_search.send_keys(scan)
         time.sleep(1.1)
